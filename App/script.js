@@ -12,7 +12,7 @@ function getHttpRequest() {
         } catch (e) {
             try {
                 httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
-            } catch (e) {}
+            } catch (e) { }
         }
     }
 
@@ -26,24 +26,27 @@ function getHttpRequest() {
 
 function getProduct() {
     var xhr = getHttpRequest()
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
+        var list = document.createElement("ul");
+        document.querySelector(".container-caddy").appendChild(list);
         if (xhr.readyState === 4) {
             if (xhr.status === 200) {
                 var results = JSON.parse(xhr.responseText) // contient le résultat de la page;
-                console.log(results);
+
                 results.products.forEach(result => {
-                    console.log(result.images);
+
                     result.images.forEach(image => {
 
                         var button = document.createElement("a");
                         button.classList.add("btn");
                         button.classList.add("airmax-button");
+                        button.classList.add(image.alt);
+                        button.id = image.id;
                         document.querySelector(".container-card").appendChild(button);
 
                         var card = document.createElement("div");
                         card.classList.add("card");
                         card.style = "width: 18rem";
-                        console.log(card);
 
                         button.appendChild(card);
 
@@ -58,12 +61,25 @@ function getProduct() {
 
                         var h5 = document.createElement("h5");
                         h5.classList.add("card-title");
-                        h5.innerHTML = "Chaussures air max";
+                        h5.innerHTML = image.alt;
                         cardBody.appendChild(h5);
 
                         var p = document.createElement("p");
                         p.classList.add("card-text");
                         cardBody.appendChild(p);
+
+                        var allButton = document.querySelectorAll(".airmax-button");
+
+                        allButton.forEach(button => {
+                            button.addEventListener("click", function (el) {
+                                if (button.id == image.id) {
+                                    console.log(image);
+                                    var elList = document.createElement("li");
+                                    elList.innerHTML = image.alt;
+                                    list.appendChild(elList);
+                                }
+                            });
+                        });
                     });
                 });
             } else {
@@ -76,10 +92,10 @@ function getProduct() {
 
             // increase cart contain
             allButton.forEach(button => {
-                button.addEventListener("click", function(el) {
+                button.addEventListener("click", function (el) {
                     count = count + 1;
                     counter.innerHTML = count;
-                })
+                });
             });
             document.querySelector(".caddy").appendChild(counter);
 
@@ -88,12 +104,12 @@ function getProduct() {
             minus.classList.add("btn");
             minus.classList.add("btn-secondary");
             minus.innerText = "-";
-            minus.addEventListener("click", function() {
+            minus.addEventListener("click", function () {
                 if (count > 0) {
                     count = count - 1;
                     counter.innerHTML = count;
                 }
-            })
+            });
             document.querySelector(".caddy").appendChild(minus);
 
             // clear  cart
@@ -101,9 +117,10 @@ function getProduct() {
             empty.classList.add("btn");
             empty.classList.add("btn-danger");
             empty.innerText = "clear cart";
-            empty.addEventListener("click", function() {
+            empty.addEventListener("click", function () {
                 counter.innerHTML = "";
                 count = 0;
+                list.innerHTML = "";
             })
             document.querySelector(".caddy").appendChild(empty);
         }
@@ -113,29 +130,51 @@ function getProduct() {
     xhr.send();
 }
 
-
 function postOrder() {
     var xhr = getHttpRequest()
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
         if (xhr.readyState === 4) {
+            console.log(xhr);
             if (xhr.status === 200) {
                 var results = xhr.responseText
-                console.log(results);
+                console.log(xhr);
                 // Logique 
             } else {
                 alert("Impossible de contacter le serveur")
             }
         }
     }
-    xhr.open('post', 'http://localhost:1234/orders', true)
+    const json = {
+        "order": {
+          "line_items": [
+            {
+              "variant_id": 34450262425754,
+              "quantity": 1
+            }
+          ]
+        }
+    }
+    xhr.open('post', 'http://localhost:1234/order', true)
+    xhr.setRequestHeader('Content-Type','application/json');
+    xhr.send(JSON.stringify(json));
+    console.log(JSON.stringify(json));
+}
+
+function getOrder() {
+    var xhr = getHttpRequest()
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                var results = xhr.responseText
+            } else {
+                alert("Impossible de contacter le serveur")
+            }
+        }
+    }
+    xhr.open('get', 'http://localhost:1234/orders', true)
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    xhr.send("hello");
+    xhr.send();
 }
 getProduct();
-Empty();
+getOrder()
 postOrder();
-
-function Empty() {
-
-
-}
